@@ -21,8 +21,7 @@ SET
 @AIName		:= "SmartAI",
 @Script 	:= "All_Mounts_NPC",
 @CreatureTxt     := "Hail $N. I can teach you to ride.. anything!",
-@NPCTxt     := 601014,
-@Comment    := "Used for mount trainer npc";
+@NPCTxt     := 601014;
 
 -- NPC
 DELETE FROM creature_template WHERE entry = @Entry;
@@ -31,7 +30,7 @@ INSERT INTO creature_template (`entry`, `name`, `subname`, `IconName`, `gossip_m
 
 
 DELETE FROM `creature_text` WHERE `CreatureID`=@Entry;
-INSERT INTO `creature_text` (`CreatureID`, `Text`, 'Comment') VALUES (@Entry, @CreatureTxt, @comment);
+INSERT INTO `creature_text` (`CreatureID`, `Text`) VALUES (@Entry, @CreatureTxt);
 
 DELETE FROM `creature_template_model` WHERE `CreatureID`=@Entry;
 INSERT INTO `creature_template_model` (`CreatureID`, `CreatureDisplayID`) VALUES (@Entry, @Model);

@@ -79,6 +79,7 @@ if(COPY_CONF AND WIN32)
     add_custom_command(TARGET worldserver
       POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/worldserver.conf.dist ${CMAKE_BINARY_DIR}/bin/$(ConfigurationName)/
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/custom/npc_allmounts.conf.dist ${CMAKE_BINARY_DIR}/bin/$(ConfigurationName)/
     )
   elseif(MINGW)
     add_custom_command(TARGET worldserver
