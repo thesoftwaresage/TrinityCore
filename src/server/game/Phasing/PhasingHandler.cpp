@@ -283,7 +283,7 @@ void PhasingHandler::OnMapChange(WorldObject* object)
                 for (uint32 uiMapPhaseId : visibleMapInfo->UiMapPhaseIDs)
                     phaseShift.AddUiMapPhaseId(uiMapPhaseId);
             }
-            else if (visibleMapPair.first == object->GetMapId())
+            else
                 suppressedPhaseShift.AddVisibleMapId(visibleMapInfo->Id, visibleMapInfo);
         }
     }

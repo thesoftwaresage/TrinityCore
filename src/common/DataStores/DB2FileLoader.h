@@ -66,8 +66,10 @@ struct DB2SectionHeader
 
 #pragma pack(pop)
 
-struct DB2FieldMeta
+struct TC_COMMON_API DB2FieldMeta
 {
+    DB2FieldMeta(bool isSigned, DBCFormer type, char const* name);
+
     bool IsSigned;
     DBCFormer Type;
     char const* Name;

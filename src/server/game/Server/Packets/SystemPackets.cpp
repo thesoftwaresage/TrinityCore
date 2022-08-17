@@ -77,11 +77,10 @@ WorldPacket const* FeatureSystemStatus::Write()
     _worldPacket << uint32(ClubsPresenceUpdateTimer);
     _worldPacket << uint32(HiddenUIClubsPresenceUpdateTimer);
 
-    _worldPacket << int32(ActiveSeason);
+    _worldPacket << int32(GameRuleUnknown1);
     _worldPacket << uint32(GameRuleValues.size());
 
     _worldPacket << int16(MaxPlayerNameQueriesPerPacket);
-    _worldPacket << int16(PlayerNameQueryTelemetryInterval);
 
     for (GameRuleValuePair const& gameRuleValue : GameRuleValues)
         _worldPacket << gameRuleValue;
@@ -190,7 +189,6 @@ WorldPacket const* FeatureSystemStatusGlueScreen::Write()
     _worldPacket.WriteBit(LiveRegionKeyBindingsCopyEnabled);
     _worldPacket.WriteBit(Unknown901CheckoutRelated);
     _worldPacket.WriteBit(EuropaTicketSystemStatus.has_value());
-    _worldPacket.WriteBit(LaunchETA.has_value());
     _worldPacket.FlushBits();
 
     if (EuropaTicketSystemStatus)
@@ -206,13 +204,9 @@ WorldPacket const* FeatureSystemStatusGlueScreen::Write()
     _worldPacket << int32(ActiveClassTrialBoostType);
     _worldPacket << int32(MinimumExpansionLevel);
     _worldPacket << int32(MaximumExpansionLevel);
-    _worldPacket << int32(ActiveSeason);
+    _worldPacket << int32(GameRuleUnknown1);
     _worldPacket << uint32(GameRuleValues.size());
     _worldPacket << int16(MaxPlayerNameQueriesPerPacket);
-    _worldPacket << int16(PlayerNameQueryTelemetryInterval);
-
-    if (LaunchETA)
-        _worldPacket << int32(*LaunchETA);
 
     if (!LiveRegionCharacterCopySourceRegions.empty())
         _worldPacket.append(LiveRegionCharacterCopySourceRegions.data(), LiveRegionCharacterCopySourceRegions.size());

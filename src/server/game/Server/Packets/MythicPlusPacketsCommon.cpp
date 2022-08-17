@@ -35,8 +35,8 @@ ByteBuffer& operator<<(ByteBuffer& data, DungeonScoreMapSummary const& dungeonSc
 
 ByteBuffer& operator<<(ByteBuffer& data, DungeonScoreSummary const& dungeonScoreSummary)
 {
-    data << float(dungeonScoreSummary.OverallScoreCurrentSeason);
-    data << float(dungeonScoreSummary.LadderScoreCurrentSeason);
+    data << float(dungeonScoreSummary.CurrentSeasonScore);
+    data << float(dungeonScoreSummary.LifetimeBestSeasonScore);
     data << uint32(dungeonScoreSummary.Runs.size());
     for (DungeonScoreMapSummary const& dungeonScoreMapSummary : dungeonScoreSummary.Runs)
         data << dungeonScoreMapSummary;
@@ -104,14 +104,14 @@ ByteBuffer& operator<<(ByteBuffer& data, DungeonScoreMapData const& dungeonScore
 ByteBuffer& operator<<(ByteBuffer& data, DungeonScoreSeasonData const& dungeonScoreSeasonData)
 {
     data << int32(dungeonScoreSeasonData.Season);
-    data << uint32(dungeonScoreSeasonData.SeasonMaps.size());
-    data << uint32(dungeonScoreSeasonData.LadderMaps.size());
+    data << uint32(dungeonScoreSeasonData.Maps.size());
+    data << uint32(dungeonScoreSeasonData.Maps2.size());
     data << float(dungeonScoreSeasonData.SeasonScore);
-    data << float(dungeonScoreSeasonData.LadderScore);
-    for (DungeonScoreMapData const& map : dungeonScoreSeasonData.SeasonMaps)
+    data << float(dungeonScoreSeasonData.SeasonScore2);
+    for (DungeonScoreMapData const& map : dungeonScoreSeasonData.Maps)
         data << map;
 
-    for (DungeonScoreMapData const& map : dungeonScoreSeasonData.LadderMaps)
+    for (DungeonScoreMapData const& map : dungeonScoreSeasonData.Maps2)
         data << map;
 
     return data;
