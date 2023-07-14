@@ -39,11 +39,13 @@ float AreaTriggerShapeInfo::GetMaxSearchRadius() const
         case AREATRIGGER_TYPE_SPHERE:
             return std::max(SphereDatas.Radius, SphereDatas.RadiusTarget);
         case AREATRIGGER_TYPE_BOX:
-            return std::sqrt(BoxDatas.Extents[0] * BoxDatas.Extents[0] / 4 + BoxDatas.Extents[1] * BoxDatas.Extents[1] / 4);
+            return std::sqrt(BoxDatas.Extents[0] * BoxDatas.Extents[0] + BoxDatas.Extents[1] * BoxDatas.Extents[1]);
         case AREATRIGGER_TYPE_CYLINDER:
             return std::max(CylinderDatas.Radius, CylinderDatas.RadiusTarget);
         case AREATRIGGER_TYPE_DISK:
             return std::max(DiskDatas.OuterRadius, DiskDatas.OuterRadiusTarget);
+        case AREATRIGGER_TYPE_BOUNDED_PLANE:
+            return std::sqrt(BoundedPlaneDatas.Extents[0] * BoundedPlaneDatas.Extents[0] / 4 + BoundedPlaneDatas.Extents[1] * BoundedPlaneDatas.Extents[1] / 4);
         default:
             break;
     }

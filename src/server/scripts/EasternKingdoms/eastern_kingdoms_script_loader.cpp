@@ -21,6 +21,7 @@ void AddSC_boss_balinda();
 void AddSC_boss_drekthar();
 void AddSC_boss_galvangar();
 void AddSC_boss_vanndar();
+void AddSC_arathi_basin();                   //Arathi Basin
 void AddSC_boss_alizabal();                  //Baradin Hold
 void AddSC_boss_occuthar();
 void AddSC_boss_pit_lord_argaloth();
@@ -191,6 +192,7 @@ void AddSC_dun_morogh_area_coldridge_valley();
 void AddSC_duskwood();
 void AddSC_eastern_plaguelands();
 void AddSC_elwynn_forest();
+void AddSC_eversong_woods();
 //void AddSC_ghostlands();
 void AddSC_hinterlands();
 void AddSC_isle_of_queldanas();
@@ -212,6 +214,7 @@ void AddEasternKingdomsScripts()
     AddSC_boss_drekthar();
     AddSC_boss_galvangar();
     AddSC_boss_vanndar();
+    AddSC_arathi_basin();                   //Arathi Basin
     AddSC_boss_alizabal();                  //Baradin Hold
     AddSC_boss_occuthar();
     AddSC_boss_pit_lord_argaloth();
@@ -383,6 +386,7 @@ void AddEasternKingdomsScripts()
     AddSC_duskwood();
     AddSC_eastern_plaguelands();
     AddSC_elwynn_forest();
+    AddSC_eversong_woods();
     //AddSC_ghostlands();
     AddSC_hinterlands();
     AddSC_isle_of_queldanas();

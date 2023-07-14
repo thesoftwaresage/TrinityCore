@@ -879,7 +879,7 @@ public:
                 Player* groupMember = nullptr;
 
                 uint8 GroupMemberCount = 0;
-                uint8 DeadMemberCount = 0;
+                //uint8 DeadMemberCount = 0;
                 uint8 FailedMemberCount = 0;
 
                 Group::MemberSlotList const& members = EventGroup->GetMemberSlots();
@@ -896,8 +896,8 @@ public:
                     }
                     ++GroupMemberCount;
 
-                    if (groupMember->isDead())
-                        ++DeadMemberCount;
+                    //if (groupMember->isDead())
+                    //    ++DeadMemberCount;
                 }
 
                 if (GroupMemberCount == FailedMemberCount || !player->IsWithinDistInMap(me, EVENT_AREA_RADIUS))
@@ -1231,6 +1231,7 @@ class go_wind_stone : public GameObjectScript
                     {
                         case GOSSIP_ID_LESSER_WS:
                         {
+                            InitGossipMenuFor(player, GOSSIP_ID_LESSER_WS);
                             if (rank >= 1) // 1 or 2 or 3
                                 AddGossipItemFor(player, GOSSIP_ID_LESSER_WS, OPTION_ID_WS_RANDOM, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
                             else
@@ -1252,6 +1253,7 @@ class go_wind_stone : public GameObjectScript
                         }
                         case GOSSIP_ID_WIND_STONE:
                         {
+                            InitGossipMenuFor(player, GOSSIP_ID_WIND_STONE);
                             if (rank >= 2) // 2 or 3
                                 AddGossipItemFor(player, GOSSIP_ID_WIND_STONE, OPTION_ID_WS_RANDOM, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 6);
                             else
@@ -1273,6 +1275,7 @@ class go_wind_stone : public GameObjectScript
                         }
                         case GOSSIP_ID_GREATER_WS:
                         {
+                            InitGossipMenuFor(player, GOSSIP_ID_GREATER_WS);
                             if (rank == 3) // 3
                                 AddGossipItemFor(player, GOSSIP_ID_GREATER_WS, OPTION_ID_WS_RANDOM, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 11);
                             else
@@ -1451,7 +1454,7 @@ class spell_silithus_summon_cultist_periodic : public AuraScript
 
     bool Validate(SpellInfo const* spellInfo) override
     {
-        return !spellInfo->GetEffects().empty() && ValidateSpellInfo({ spellInfo->GetEffect(EFFECT_0).TriggerSpell });
+        return ValidateSpellEffect({ { spellInfo->Id, EFFECT_0 } }) && ValidateSpellInfo({ spellInfo->GetEffect(EFFECT_0).TriggerSpell });
     }
 
     void PeriodicTick(AuraEffect const* aurEff)
@@ -1460,7 +1463,7 @@ class spell_silithus_summon_cultist_periodic : public AuraScript
 
         // All these spells trigger a spell that requires reagents; if the
         // triggered spell is cast as "triggered", reagents are not consumed
-        GetTarget()->CastSpell(nullptr, aurEff->GetSpellEffectInfo().TriggerSpell, CastSpellExtraArgs(TriggerCastFlags(TRIGGERED_FULL_MASK & ~TRIGGERED_IGNORE_POWER_AND_REAGENT_COST)).SetTriggeringAura(aurEff));
+        GetTarget()->CastSpell(nullptr, aurEff->GetSpellEffectInfo().TriggerSpell, CastSpellExtraArgs(TRIGGERED_FULL_MASK & ~TRIGGERED_IGNORE_POWER_AND_REAGENT_COST).SetTriggeringAura(aurEff));
     }
 
     void Register() override

@@ -17,6 +17,7 @@
 
 #include "icecrown_citadel.h"
 #include "CellImpl.h"
+#include "Containers.h"
 #include "GameObjectAI.h"
 #include "GridNotifiersImpl.h"
 #include "InstanceScript.h"
@@ -378,7 +379,7 @@ struct npc_highlord_tirion_fordring_lh : public ScriptedAI
                 case EVENT_MURADIN_RUN:
                 case EVENT_SAURFANG_RUN:
                     if (Creature* factionNPC = ObjectAccessor::GetCreature(*me, _factionNPC))
-                        factionNPC->GetMotionMaster()->MovePath(factionNPC->GetSpawnId() * 10, false);
+                        factionNPC->GetMotionMaster()->MovePath((factionNPC->GetSpawnId() * 10) << 3, false);
                     me->setActive(false);
                     _damnedKills = 3;
                     break;
@@ -1559,20 +1560,6 @@ class at_icc_shutdown_traps : public AreaTriggerScript
         }
 };
 
-class at_icc_start_blood_quickening : public AreaTriggerScript
-{
-    public:
-        at_icc_start_blood_quickening() : AreaTriggerScript("at_icc_start_blood_quickening") { }
-
-        bool OnTrigger(Player* player, AreaTriggerEntry const* /*areaTrigger*/) override
-        {
-            if (InstanceScript* instance = player->GetInstanceScript())
-                if (instance->GetData(DATA_BLOOD_QUICKENING_STATE) == NOT_STARTED)
-                    instance->SetData(DATA_BLOOD_QUICKENING_STATE, IN_PROGRESS);
-            return true;
-        }
-};
-
 class at_icc_nerubar_broodkeeper : public OnlyOnceAreaTriggerScript
 {
     public:
@@ -1627,6 +1614,5 @@ void AddSC_icecrown_citadel()
     // AreaTriggers
     new at_icc_saurfang_portal();
     new at_icc_shutdown_traps();
-    new at_icc_start_blood_quickening();
     new at_icc_nerubar_broodkeeper();
 }

@@ -1100,14 +1100,14 @@ enum TrinityStrings
     // Instance commands
     LANG_COMMAND_LIST_BIND_INFO           = 5045,
     LANG_COMMAND_LIST_BIND_PLAYER_BINDS   = 5046,
-    LANG_COMMAND_LIST_BIND_GROUP_BINDS    = 5047,
+    LANG_COMMAND_INST_UNBIND_FAILED       = 5047,
     LANG_COMMAND_INST_UNBIND_UNBINDING    = 5048,
     LANG_COMMAND_INST_UNBIND_UNBOUND      = 5049,
     LANG_COMMAND_INST_STAT_LOADED_INST    = 5050,
     LANG_COMMAND_INST_STAT_PLAYERS_IN     = 5051,
     LANG_COMMAND_INST_STAT_SAVES          = 5052,
     LANG_COMMAND_INST_STAT_PLAYERSBOUND   = 5053,
-    LANG_COMMAND_INST_STAT_GROUPSBOUND    = 5054,
+    //                                    = 5054, // old LANG_COMMAND_INST_STAT_GROUPSBOUND
     LANG_NOT_DUNGEON                      = 5055, // Map is not a dungeon.
     LANG_NO_INSTANCE_DATA                 = 5056, // Map has no instance data.
     LANG_COMMAND_INST_SET_BOSS_STATE      = 5057,
@@ -1148,8 +1148,9 @@ enum TrinityStrings
     LANG_NPCINFO_NPC_FLAGS                = 5086,
     LANG_NPCINFO_PHASE_IDS                = 5087,
     LANG_SCENARIO                         = 5088,
+    LANG_OBJECTINFO_STRINGIDS             = 5089,
 
-    // Room for more Trinity strings        5089-6603
+    // Room for more Trinity strings        5090-6603
 
     // Level requirement notifications
     LANG_SAY_REQ                          = 6604,

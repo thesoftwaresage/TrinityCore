@@ -13,9 +13,7 @@
 #define __CASCPORT_H__
 
 #ifndef __cplusplus
-  #define bool  char
-  #define true  1
-  #define false 0
+  #include <stdbool.h>
 #endif
 
 //-----------------------------------------------------------------------------
@@ -23,10 +21,16 @@
 
 #if !defined(CASCLIB_PLATFORM_DEFINED) && (defined(_WIN32) || defined(_WIN64))
 
+  // Make sure that headers are only included once in newer SDKs
+  #if defined (_MSC_VER) && (_MSC_VER >= 1020)
+  #pragma once
+  #endif
+
   // In MSVC 8.0, there are some functions declared as deprecated.
   #define _CRT_SECURE_NO_DEPRECATE
   #define _CRT_NON_CONFORMING_SWPRINTFS
 
+  // Prevent duplicate symbols defined by Windows headers
   #ifndef WIN32_LEAN_AND_MEAN
     #define WIN32_LEAN_AND_MEAN
   #endif
@@ -43,7 +47,6 @@
   #include <direct.h>
   #include <malloc.h>
   #include <windows.h>
-  #include <ws2tcpip.h>
   #include <strsafe.h>
 
   #define CASCLIB_PLATFORM_LITTLE_ENDIAN
@@ -90,7 +93,7 @@
   #include <netdb.h>
 
   // Support for PowerPC on Max OS X
-  #if (__ppc__ == 1) || (__POWERPC__ == 1) || (_ARCH_PPC == 1)
+  #if(__ppc__ == 1) || (__POWERPC__ == 1) || (_ARCH_PPC == 1)
     #include <stdint.h>
     #include <CoreFoundation/CFByteOrder.h>
   #endif
@@ -269,6 +272,10 @@
 
 #ifndef ERROR_INDEX_PARSING_DONE
 #define ERROR_INDEX_PARSING_DONE         1010
+#endif
+
+#ifndef ERROR_REPARSE_ROOT
+#define ERROR_REPARSE_ROOT               1011
 #endif
 
 #ifndef _countof

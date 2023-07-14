@@ -294,6 +294,7 @@ struct boss_muru : public BossAI
         {
             me->SetVisible(false);
             _entropiusGUID = summon->GetGUID();
+            DoZoneInCombat(summon);
             if (_hasEnraged)
                 summon->CastSpell(summon, SPELL_ENRAGE, true);
             return;
@@ -615,7 +616,7 @@ class spell_muru_negative_energy_periodic : public AuraScript
 
     bool Validate(SpellInfo const* spellInfo) override
     {
-        return !spellInfo->GetEffects().empty() && ValidateSpellInfo({ spellInfo->GetEffect(EFFECT_0).TriggerSpell });
+        return ValidateSpellEffect({ { spellInfo->Id, EFFECT_0 } }) && ValidateSpellInfo({ spellInfo->GetEffect(EFFECT_0).TriggerSpell });
     }
 
     void PeriodicTick(AuraEffect const* aurEff)

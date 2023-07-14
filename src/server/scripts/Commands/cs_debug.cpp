@@ -37,7 +37,6 @@ EndScriptData */
 #include "DB2Stores.h"
 #include "GameTime.h"
 #include "GridNotifiersImpl.h"
-#include "InstanceSaveMgr.h"
 #include "InstanceScript.h"
 #include "Language.h"
 #include "Log.h"
@@ -119,8 +118,9 @@ public:
             { "raidreset",          HandleDebugRaidResetCommand,           rbac::RBAC_PERM_COMMAND_DEBUG,   Console::No },
             { "neargraveyard",      HandleDebugNearGraveyard,              rbac::RBAC_PERM_COMMAND_DEBUG,   Console::No },
             { "instancespawn",      HandleDebugInstanceSpawns,             rbac::RBAC_PERM_COMMAND_DEBUG,   Console::No },
-            { "conversation" ,      HandleDebugConversationCommand,        rbac::RBAC_PERM_COMMAND_DEBUG,   Console::No },
-            { "wsexpression" ,      HandleDebugWSExpressionCommand,        rbac::RBAC_PERM_COMMAND_DEBUG,   Console::No },
+            { "conversation",       HandleDebugConversationCommand,        rbac::RBAC_PERM_COMMAND_DEBUG,   Console::No },
+            { "wsexpression",       HandleDebugWSExpressionCommand,        rbac::RBAC_PERM_COMMAND_DEBUG,   Console::No },
+            { "playercondition",    HandleDebugPlayerConditionCommand,     rbac::RBAC_PERM_COMMAND_DEBUG,   Console::No },
             { "pvp warmode",        HandleDebugWarModeBalanceCommand,      rbac::RBAC_PERM_COMMAND_DEBUG,   Console::Yes },
             { "dummy",              HandleDebugDummyCommand,               rbac::RBAC_PERM_COMMAND_DEBUG,   Console::No },
             { "asan memoryleak",    HandleDebugMemoryLeak,                 rbac::RBAC_PERM_COMMAND_DEBUG,   Console::Yes },
@@ -485,11 +485,11 @@ public:
             }
             else
             {
-                TC_LOG_ERROR("misc", "Sending opcode that has unknown type '%s'", type.c_str());
+                TC_LOG_ERROR("misc", "Sending opcode that has unknown type '{}'", type);
                 break;
             }
         }
-        TC_LOG_DEBUG("network", "Sending opcode %u", data.GetOpcode());
+        TC_LOG_DEBUG("network", "Sending opcode {}", data.GetOpcode());
         data.hexlike();
         player->GetSession()->SendPacket(&data, true);
         handler->PSendSysMessage(LANG_COMMAND_OPCODESENT, data.GetOpcode(), unit->GetName().c_str());
@@ -515,6 +515,7 @@ public:
             handler->PSendSysMessage(LANG_DEBUG_AREATRIGGER_OFF);
             player->isDebugAreaTriggers = false;
         }
+        player->UpdateObjectVisibility();
         return true;
     }
 
@@ -547,9 +548,15 @@ public:
         if (!target)
             return false;
 
-        handler->PSendSysMessage("Loot recipient for creature %s (%s, SpawnID " UI64FMTD ") is %s",
-            target->GetName().c_str(), target->GetGUID().ToString().c_str(), target->GetSpawnId(),
-            target->hasLootRecipient() ? (target->GetLootRecipient() ? target->GetLootRecipient()->GetName().c_str() : "offline") : "no loot recipient");
+        handler->PSendSysMessage("Loot recipients for creature %s (%s, SpawnID " UI64FMTD ") are:",
+            target->GetName().c_str(), target->GetGUID().ToString().c_str(), target->GetSpawnId());
+
+        for (ObjectGuid tapperGuid : target->GetTapList())
+        {
+            Player* tapper = ObjectAccessor::GetPlayer(*target, tapperGuid);
+            handler->PSendSysMessage("* %s", tapper ? tapper->GetName().c_str() : "offline");
+        }
+
         return true;
     }
 
@@ -1200,7 +1207,7 @@ public:
     {
         Player* player = handler->GetPlayer();
 
-        TC_LOG_INFO("sql.dev", "(@PATH, XX, %.3f, %.3f, %.5f, %.5f, 0, 0, 0, 100, 0),", player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation());
+        TC_LOG_INFO("sql.dev", "(@PATH, XX, {:.3f}, {:.3f}, {:.5f}, {:.5f}, 0, 0, 0, 100, 0),", player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation());
 
         handler->PSendSysMessage("Waypoint SQL written to SQL Developer log");
         return true;
@@ -1347,27 +1354,6 @@ public:
             return true;
         }
 
-        if (!difficulty)
-        {
-            handler->PSendSysMessage("Resetting all difficulties for '%s'.", mEntry->MapName[handler->GetSessionDbcLocale()]);
-            for (DifficultyEntry const* diff : sDifficultyStore)
-            {
-                if (sDB2Manager.GetMapDifficultyData(mapId, Difficulty(diff->ID)))
-                {
-                    handler->PSendSysMessage("Resetting difficulty %d for '%s'.", diff->ID, mEntry->MapName[handler->GetSessionDbcLocale()]);
-                    sInstanceSaveMgr->ForceGlobalReset(mapId, Difficulty(diff->ID));
-                }
-            }
-        }
-        else if (mEntry->IsNonRaidDungeon() && *difficulty == DIFFICULTY_NORMAL)
-        {
-            handler->PSendSysMessage("'%s' does not have any permanent saves for difficulty %d.", mEntry->MapName[handler->GetSessionDbcLocale()], *difficulty);
-        }
-        else
-        {
-            handler->PSendSysMessage("Resetting difficulty %d for '%s'.", *difficulty, mEntry->MapName[handler->GetSessionDbcLocale()]);
-            sInstanceSaveMgr->ForceGlobalReset(mapId, Difficulty(*difficulty));
-        }
         return true;
     }
 
@@ -1593,13 +1579,36 @@ public:
         if (!wsExpressionEntry)
             return false;
 
-        if (sConditionMgr->IsPlayerMeetingExpression(target, wsExpressionEntry))
+        if (ConditionMgr::IsMeetingWorldStateExpression(target->GetMap(), wsExpressionEntry))
             handler->PSendSysMessage("Expression %u meet", expressionId);
         else
             handler->PSendSysMessage("Expression %u not meet", expressionId);
 
         return true;
-    };
+    }
+
+    static bool HandleDebugPlayerConditionCommand(ChatHandler* handler, uint32 playerConditionId)
+    {
+        Player* target = handler->getSelectedPlayerOrSelf();
+
+        if (!target)
+        {
+            handler->SendSysMessage(LANG_PLAYER_NOT_FOUND);
+            handler->SetSentErrorMessage(true);
+            return false;
+        }
+
+        PlayerConditionEntry const* playerConditionEntry = sPlayerConditionStore.LookupEntry(playerConditionId);
+        if (!playerConditionEntry)
+            return false;
+
+        if (ConditionMgr::IsPlayerMeetingCondition(target, playerConditionEntry))
+            handler->PSendSysMessage("PlayerCondition %u met", playerConditionId);
+        else
+            handler->PSendSysMessage("PlayerCondition %u not met", playerConditionId);
+
+        return true;
+    }
 
     static bool HandleDebugOutOfBounds([[maybe_unused]] ChatHandler* handler)
     {

@@ -18,6 +18,7 @@
 #include "ScriptMgr.h"
 #include "CellImpl.h"
 #include "CombatAI.h"
+#include "Containers.h"
 #include "CreatureTextMgr.h"
 #include "GameEventMgr.h"
 #include "GameObject.h"
@@ -1065,10 +1066,11 @@ public:
                                 break;
                         }
 
-                        Start(false, true);
+                        LoadPath((me->GetEntry() << 3) | 2);
+                        Start(false);
                     }
                     else
-                        EnterEvadeMode();                       //something went wrong
+                        EnterEvadeMode(EvadeReason::Other);                       //something went wrong
 
                     RunAwayTimer = 30000;
                 }
@@ -1639,6 +1641,7 @@ class npc_wormhole : public CreatureScript
 
             bool OnGossipHello(Player* player) override
             {
+                InitGossipMenuFor(player, MENU_ID_WORMHOLE);
                 if (me->IsSummon())
                 {
                     if (player == me->ToTempSummon()->GetSummoner())
@@ -1926,7 +1929,7 @@ class npc_train_wrecker : public CreatureScript
                             {
                                 me->SetFacingTo(target->GetOrientation());
                                 me->HandleEmoteCommand(EMOTE_ONESHOT_ATTACK1H);
-                                _timer = 1.5 * IN_MILLISECONDS;
+                                _timer = 1.5 * AsUnderlyingType(IN_MILLISECONDS);
                                 _nextAction = EVENT_DO_WRECK;
                             }
                             else
@@ -2026,7 +2029,8 @@ enum ArgentPetGossipOptions
 
 enum Misc
 {
-    NPC_ARGENT_SQUIRE  = 33238
+    NPC_ARGENT_SQUIRE   = 33238,
+    ACHIEVEMENT_PONY_UP = 3736
 };
 
 struct ArgentPonyBannerSpells
@@ -2053,24 +2057,24 @@ public:
     {
         npc_argent_squire_gruntlingAI(Creature* creature) : ScriptedAI(creature)
         {
-            ScheduleTasks();
         }
 
-        void ScheduleTasks()
+        void Reset() override
         {
-            _scheduler
-                .Schedule(Seconds(1), [this](TaskContext /*context*/)
+            if (Player* owner = Object::ToPlayer(me->GetOwner()))
+            {
+                if (Aura* ownerTired = owner->GetAura(SPELL_TIRED_PLAYER))
+                    if (Aura* squireTired = me->AddAura(IsArgentSquire() ? SPELL_AURA_TIRED_S : SPELL_AURA_TIRED_G, me))
+                        squireTired->SetDuration(ownerTired->GetDuration());
+
+                if (owner->HasAchieved(ACHIEVEMENT_PONY_UP) && !me->HasAura(SPELL_AURA_TIRED_S) && !me->HasAura(SPELL_AURA_TIRED_G))
                 {
-                    if (Aura* ownerTired = me->GetOwner()->GetAura(SPELL_TIRED_PLAYER))
-                        if (Aura* squireTired = me->AddAura(IsArgentSquire() ? SPELL_AURA_TIRED_S : SPELL_AURA_TIRED_G, me))
-                            squireTired->SetDuration(ownerTired->GetDuration());
-                })
-                .Schedule(Seconds(1), [this](TaskContext context)
-                {
-                    if ((me->HasAura(SPELL_AURA_TIRED_S) || me->HasAura(SPELL_AURA_TIRED_G)) && me->HasNpcFlag(UNIT_NPC_FLAG_BANKER | UNIT_NPC_FLAG_MAILBOX | UNIT_NPC_FLAG_VENDOR))
-                        me->RemoveNpcFlag(UNIT_NPC_FLAG_BANKER | UNIT_NPC_FLAG_MAILBOX | UNIT_NPC_FLAG_VENDOR);
-                    context.Repeat();
-                });
+                    me->SetNpcFlag(UNIT_NPC_FLAG_BANKER | UNIT_NPC_FLAG_MAILBOX | UNIT_NPC_FLAG_VENDOR);
+                    return;
+                }
+            }
+
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_BANKER | UNIT_NPC_FLAG_MAILBOX | UNIT_NPC_FLAG_VENDOR);
         }
 
         bool OnGossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId) override
@@ -2079,7 +2083,7 @@ public:
             {
                 case GOSSIP_OPTION_BANK:
                 {
-                    me->SetNpcFlag(UNIT_NPC_FLAG_BANKER);
+                    me->RemoveNpcFlag(UNIT_NPC_FLAG_MAILBOX | UNIT_NPC_FLAG_VENDOR);
                     uint32 _bankAura = IsArgentSquire() ? SPELL_AURA_BANK_S : SPELL_AURA_BANK_G;
                     if (!me->HasAura(_bankAura))
                         DoCastSelf(_bankAura);
@@ -2090,7 +2094,7 @@ public:
                 }
                 case GOSSIP_OPTION_SHOP:
                 {
-                    me->SetNpcFlag(UNIT_NPC_FLAG_VENDOR);
+                    me->RemoveNpcFlag(UNIT_NPC_FLAG_BANKER | UNIT_NPC_FLAG_MAILBOX);
                     uint32 _shopAura = IsArgentSquire() ? SPELL_AURA_SHOP_S : SPELL_AURA_SHOP_G;
                     if (!me->HasAura(_shopAura))
                         DoCastSelf(_shopAura);
@@ -2101,9 +2105,7 @@ public:
                 }
                 case GOSSIP_OPTION_MAIL:
                 {
-                    me->SetNpcFlag(UNIT_NPC_FLAG_MAILBOX);
-                    player->GetSession()->SendShowMailBox(me->GetGUID());
-
+                    me->RemoveNpcFlag(UNIT_NPC_FLAG_BANKER | UNIT_NPC_FLAG_VENDOR);
                     uint32 _mailAura = IsArgentSquire() ? SPELL_AURA_POSTMAN_S : SPELL_AURA_POSTMAN_G;
                     if (!me->HasAura(_mailAura))
                         DoCastSelf(_mailAura);
@@ -2121,21 +2123,17 @@ public:
                         DoCastSelf(bannerSpells[gossipListId - 3].spellSquire, true);
                     else
                         DoCastSelf(bannerSpells[gossipListId - 3].spellGruntling, true);
+
+                    player->PlayerTalkClass->SendCloseGossip();
+                    break;
+                default:
                     break;
             }
-            player->PlayerTalkClass->SendCloseGossip();
+
             return false;
         }
 
-        void UpdateAI(uint32 diff) override
-        {
-            _scheduler.Update(diff);
-        }
-
         bool IsArgentSquire() const { return me->GetEntry() == NPC_ARGENT_SQUIRE; }
-
-    private:
-        TaskScheduler _scheduler;
     };
 
     CreatureAI* GetAI(Creature *creature) const override

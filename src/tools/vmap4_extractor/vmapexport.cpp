@@ -225,7 +225,7 @@ bool ExtractSingleWmo(std::string& fname)
     //printf("root has %d groups\n", froot->nGroups);
     for (std::size_t i = 0; i < froot.groupFileDataIDs.size(); ++i)
     {
-        std::string s = Trinity::StringFormat("FILE%08X.xxx", froot.groupFileDataIDs[i]);
+        std::string s = Trinity::StringFormat("FILE{:08X}.xxx", froot.groupFileDataIDs[i]);
         WMOGroup fgroup(s);
         if (!fgroup.open(&froot))
         {
@@ -280,7 +280,7 @@ void ParsMapFiles()
             if (!fileDataId)
                 return nullptr;
 
-            std::string description = Trinity::StringFormat("WDT for map %u - %s (FileDataID %u)", mapId, mapEntryItr->Name.c_str(), fileDataId);
+            std::string description = Trinity::StringFormat("WDT for map {} - {} (FileDataID {})", mapId, mapEntryItr->Name, fileDataId);
             std::string directory = mapEntryItr->Directory;
             itr = wdts.emplace(std::piecewise_construct, std::forward_as_tuple(mapId), std::forward_as_tuple(fileDataId, description, std::move(directory), maps_that_are_parents.count(mapId) > 0)).first;
             if (!itr->second.init(mapId))
@@ -475,7 +475,7 @@ int main(int argc, char ** argv)
     //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     // Create the working directory
     if (mkdir(szWorkDirWmo
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
                     , 0711
 #endif
                     ))
@@ -524,11 +524,11 @@ int main(int argc, char ** argv)
     {
         printf("Read Map.dbc file... ");
 
-        DB2CascFileSource source(CascStorage, MapLoadInfo::Instance()->Meta->FileDataId);
+        DB2CascFileSource source(CascStorage, MapLoadInfo::Instance.Meta->FileDataId);
         DB2FileLoader db2;
         try
         {
-            db2.Load(&source, MapLoadInfo::Instance());
+            db2.Load(&source, &MapLoadInfo::Instance);
         }
         catch (std::exception const& e)
         {
